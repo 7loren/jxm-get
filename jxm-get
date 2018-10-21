@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# 脚本来自https://support.zabbix.com/browse/ZBXNEXT-3764
+
+if [ $# != 5 ];then
+echo "Usage: $0 <JAVA_GATEWAY_HOST> <JAVA_GATEWAY_PORT> <JMX_SERVER> <JMX_PORT> <KEY>"
+exit;
+fi
+
+# create connection
+exec 3<>/dev/tcp/$1/$2
+
+# compose message
+MSG="{\"request\": \"java gateway jmx\",\"jmx_endpoint\":\"service:jmx:rmi:///jndi/rmi://$3:$4/jmxrmi\",\"keys\": [\"$5\"]}"
+# write message length as zero-padded 16-digit hexadecimal number
+printf -v LEN '%016x' "${#MSG}"
+
+# prepare message length in little endian representation
+BYTES=""
+for i in {0..14..2}
+do
+BYTES="\\x${LEN:$i:2}$BYTES"
+done
+
+# prepend protocol header and message length
+printf "ZBXD\\1$BYTES%s" "$MSG" >&3
+
+# output the result skipping 5 bytes of "ZBXD\\1" header and 8 bytes of message length
+tail -c+13 <&3
