@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# https://github.com/zabbix-book/jxm-get
 # 脚本来自https://support.zabbix.com/browse/ZBXNEXT-3764
 
 if [ $# != 5 ];then
